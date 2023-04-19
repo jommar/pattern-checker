@@ -21,7 +21,8 @@
           <v-container fluid>
             <v-card color="black pa-4">
               <v-text-field dark label="URL" v-bind="attrs" v-model="imageUrl"></v-text-field>
-              <v-slider v-if="repeat" step="50" dark v-model="size.value" :min="size.min" :max="size.max" :label="`${size.value}px`"></v-slider>
+              <v-slider v-if="repeat" step="50" dark v-model="size.value" :min="size.min" :max="size.max"
+                :label="`${size.value}px`"></v-slider>
               <v-btn v-if="repeat" @click="size.value=size.default" small>
                 Reset Size
               </v-btn>
@@ -33,6 +34,17 @@
                   <v-switch dense v-model="repeat" dark label="Repeat"></v-switch>
                 </v-col>
               </v-row>
+            </v-card>
+            <v-card class="mt-2 d-flex flex-wrap justify-start transparent elevation-0" style="overflow:auto;max-height:50vh;">
+              <div @click="setBackground(url)" :style="{
+                width:'80px',
+                height:'80px',
+                cursor:'pointer',
+                'background-color':'red',
+                'background-image':`url(${url})`,
+                'background-size':'80%',
+                'background-repeat':'repeat',
+              }" v-for="(url,index) in imageHistory" :key="index"></div>
             </v-card>
           </v-container>
         </v-col>
@@ -68,8 +80,16 @@
       el: '#app',
       vuetify: new Vuetify(),
       router,
+      watch: {
+        imageUrl(url) {
+          if (!this.history.find(i => i === url)) {
+            this.history.push(url)
+          }
+        }
+      },
       data: {
         imageUrl: '',
+        history: [],
         size: {
           default: 600,
           value: 600,
@@ -84,15 +104,18 @@
         },
       },
       computed: {
+        imageHistory() {
+          return this.history.filter(i => /\.png|\.jpg|\.jpeg/gi.test(i))
+        },
         background() {
           return this.imageUrl?.split('?')?.[0]
         }
       },
       methods: {
         setBackground(url) {
-          console.log(url)
+          this.imageUrl = url
         }
-      },
+      }
     })
   </script>
 </body>
