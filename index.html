@@ -20,12 +20,24 @@
         <v-col cols="2">
           <v-container fluid>
             <v-card color="black pa-4">
-              <v-text-field dark label="URL" v-bind="attrs" v-model="imageUrl"></v-text-field>
+              <v-text-field dark label="URL" v-bind="attrs" v-model="imageUrl" persistent-hint
+                hint="Paste image URL here"></v-text-field>
               <v-slider v-if="repeat" step="50" dark v-model="size.value" :min="size.min" :max="size.max"
                 :label="`${size.value}px`"></v-slider>
-              <v-btn v-if="repeat" @click="size.value=size.default" small>
-                Reset Size
-              </v-btn>
+
+              <v-row>
+                <v-col v-if="repeat">
+                  <v-btn block @click="size.value=size.default" small>
+                    Reset Size
+                  </v-btn>
+                </v-col>
+                <v-col v-if="history.length > 0">
+                  <v-btn block color="error" small @click="clearHistory">
+                    Clear History
+                  </v-btn>
+                </v-col>
+              </v-row>
+
               <v-row no-gutters>
                 <v-col class="mr-1">
                   <v-switch dense v-model="showBackground" dark label="Fullscreen"></v-switch>
@@ -35,12 +47,12 @@
                 </v-col>
               </v-row>
             </v-card>
-            <v-card class="mt-2 d-flex flex-wrap justify-start transparent elevation-0" style="overflow:auto;max-height:50vh;">
-              <div @click="setBackground(url)" :style="{
+            <v-card class="mt-2 d-flex flex-wrap justify-start transparent elevation-0"
+              style="overflow:auto;max-height:50vh;">
+              <div @click="setBackground(url)" @dblclick="removeBackground(url)" :style="{
                 width:'80px',
                 height:'80px',
                 cursor:'pointer',
-                'background-color':'red',
                 'background-image':`url(${url})`,
                 'background-size':'80%',
                 'background-repeat':'repeat',
@@ -72,6 +84,7 @@
   <script src="https://unpkg.com/vue-router@3.5.2/dist/vue-router.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/vuetify@2.6.3/dist/vuetify.min.js"></script>
   <script>
+    const LS_PATTERN_NAME = 'pattern-history'
     const router = new VueRouter({
       mode: 'history',
       routes: []
@@ -82,8 +95,9 @@
       router,
       watch: {
         imageUrl(url) {
-          if (!this.history.find(i => i === url)) {
+          if (!this.history?.find(i => i === url)) {
             this.history.push(url)
+            this.setHistory()
           }
         }
       },
@@ -105,16 +119,33 @@
       },
       computed: {
         imageHistory() {
-          return this.history.filter(i => /\.png|\.jpg|\.jpeg/gi.test(i))
+          return this.history?.filter(i => /\.png|\.jpg|\.jpeg/gi.test(i))
         },
         background() {
           return this.imageUrl?.split('?')?.[0]
         }
       },
       methods: {
+        setHistory() {
+          localStorage.setItem(LS_PATTERN_NAME, JSON.stringify(this.history))
+        },
+        clearHistory() {
+          this.history = []
+          this.setHistory()
+        },
+        removeBackground(url) {
+          this.history = this.history.filter(i => i !== url)
+          this.setHistory()
+        },
         setBackground(url) {
           this.imageUrl = url
         }
+      },
+      created() {
+        if (!localStorage[LS_PATTERN_NAME]) {
+          localStorage.setItem(LS_PATTERN_NAME, JSON.stringify([]))
+        }
+        this.history = JSON.parse(localStorage.getItem(LS_PATTERN_NAME))
       }
     })
   </script>
