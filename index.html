@@ -96,7 +96,7 @@
       watch: {
         imageUrl(url) {
           if (!this.history?.find(i => i === url)) {
-            this.history.push(url)
+            this.history.unshift(url)
             this.setHistory()
           }
         }
