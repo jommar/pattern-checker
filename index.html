@@ -16,6 +16,30 @@
       'background-size':repeat ? showBackground ? `${size.value}px` : null : 'cover',
       'background-repeat':repeat ? 'repeat' : 'cover',
     }">
+      <v-dialog v-model="bools.isDialogOpen" persistent>
+        <v-card>
+          <v-card-title class="primary white--text">
+            Confirm Remove
+          </v-card-title>
+          <v-card-text>
+            <v-container>
+              <v-text-field v-bind="attrs" label="Type `DELETE` to confirm" v-model="del.confString"></v-text-field>
+            </v-container>
+          </v-card-text>
+          <v-card-actions class="text-right">
+            <v-row align="end">
+              <v-col>
+                <v-btn color="error" text @click="cancelRemove">
+                  Cancel
+                </v-btn>
+                <v-btn :disabled="!willDelete" color="primary" @click="removeImage">
+                  OK
+                </v-btn>
+              </v-col>
+            </v-row>
+          </v-card-actions>
+        </v-card>
+      </v-dialog>
       <v-row class="my-0">
         <v-col cols="2">
           <v-container fluid>
@@ -85,6 +109,7 @@
   <script src="https://cdn.jsdelivr.net/npm/vuetify@2.6.3/dist/vuetify.min.js"></script>
   <script>
     const LS_PATTERN_NAME = 'pattern-history'
+    const DELETE_STRING = 'DELETE'
     const router = new VueRouter({
       mode: 'history',
       routes: []
@@ -103,6 +128,11 @@
       },
       data: {
         imageUrl: '',
+        del: {
+          confString: '',
+          url: '',
+          all: false
+        },
         history: [],
         size: {
           default: 600,
@@ -116,8 +146,14 @@
           outlined: true,
           dense: true,
         },
+        bools: {
+          isDialogOpen: false
+        }
       },
       computed: {
+        willDelete() {
+          return DELETE_STRING === this.del.confString
+        },
         imageHistory() {
           return this.history?.filter(i => /\.png|\.jpg|\.jpeg/gi.test(i))
         },
@@ -132,21 +168,31 @@
         setHistory() {
           localStorage.setItem(LS_PATTERN_NAME, JSON.stringify(this.history))
         },
-        clearHistory() {
-          const remove = prompt('Type "DELETE"') === 'DELETE'
-          if (!remove) {
+        removeImage() {
+          if (!this.willDelete) {
             return
           }
-          this.history = []
+          if (this.del.all) {
+            this.history = []
+          } else {
+            this.history = this.history.filter(i => i !== this.del.url)
+          }
           this.setHistory()
+          this.del.all = false
+          this.bools.isDialogOpen = false
+        },
+        cancelRemove() {
+          this.del.all = false
+          this.del.confString = ''
+          this.bools.isDialogOpen = false
+        },
+        clearHistory() {
+          this.del.all = true
+          this.bools.isDialogOpen = true
         },
         removeBackground(url) {
-          const remove = prompt('Type "DELETE"') === 'DELETE'
-          if (!remove) {
-            return
-          }
-          this.history = this.history.filter(i => i !== url)
-          this.setHistory()
+          this.del.url = url
+          this.bools.isDialogOpen = true
         },
         setBackground(url) {
           this.imageUrl = url
