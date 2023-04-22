@@ -21,7 +21,7 @@
           <v-container fluid>
             <v-card color="black pa-4">
               <v-text-field dark label="URL" v-bind="attrs" v-model="imageUrl" persistent-hint
-                hint="Paste image URL here"></v-text-field>
+                hint="Paste image URL here" @click="selectMe($event.target)"></v-text-field>
               <v-slider v-if="repeat" step="50" dark v-model="size.value" :min="size.min" :max="size.max"
                 :label="`${size.value}px`"></v-slider>
 
@@ -126,6 +126,9 @@
         }
       },
       methods: {
+        selectMe($element) {
+          $element.select()
+        },
         setHistory() {
           localStorage.setItem(LS_PATTERN_NAME, JSON.stringify(this.history))
         },
