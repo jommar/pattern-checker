@@ -133,10 +133,18 @@
           localStorage.setItem(LS_PATTERN_NAME, JSON.stringify(this.history))
         },
         clearHistory() {
+          const remove = confirm('Clear history?')
+          if (!remove) {
+            return
+          }
           this.history = []
           this.setHistory()
         },
         removeBackground(url) {
+          const remove = confirm('Remove image from history?')
+          if (!remove) {
+            return
+          }
           this.history = this.history.filter(i => i !== url)
           this.setHistory()
         },
